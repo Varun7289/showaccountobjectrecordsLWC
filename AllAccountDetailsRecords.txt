@@ -1,0 +1,245 @@
+<-------------------------------  AllAccountDetails.HTML ---------------------------->
+
+<template>
+
+     <lightning-card title="Accounts" icon-name="custom:custom63">  
+        <div class="slds-m-around_medium">  
+            <template if:true={availableAccounts}>      
+                <lightning-datatable
+                    key-field="Id"
+                    data={availableAccounts}
+                    columns={columns}
+                    row-number-offset={rowOffset}
+                    hide-checkbox-column="true"
+                    show-row-number-column="true">
+                </lightning-datatable>  
+            </template>      
+            <template if:true={error}>  
+                {error}>                  
+            </template>  
+        </div>  
+    </lightning-card> 
+
+    <!--lightning datatable-->
+    <!--lightning datatable-->
+   <!-- <lightning-datatable 
+   key-field="id"
+   data={parameters.data}
+   row-number-offset={rowOffset}
+   onrowaction={handleRowAction}
+   hide-checkbox-column="true"
+   columns={columns}></lightning-datatable>
+       -->
+<!-- Detail view modal start -->
+<template if:true={bShowModal}>
+<section role="dialog" tabindex="-1"
+       aria-labelledby="modal-heading-01"
+       aria-modal="true"
+       aria-describedby="modal-content-id-1"
+      class="slds-modal slds-fade-in-open">
+ <div class="slds-modal__container">
+    <!-- modal header start -->
+    <header class="slds-modal__header">
+       <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+          <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small" ></lightning-icon>
+       </button>
+       <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Record Detail</h2>
+    </header>
+    <!-- modal body start -->
+    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+      <dl class="slds-list_horizontal slds-wrap">
+          <dt class="slds-item_label slds-truncate" title="Name">Name:</dt>
+          <dd class="slds-item_detail slds-truncate">{record.Name}</dd>
+          <dt class="slds-item_label slds-truncate" title="Phone">Phone:</dt>
+          <dd class="slds-item_detail slds-truncate">{record.Phone}</dd>
+          <dt class="slds-item_label slds-truncate" title="Type">Type :</dt>
+          <dd class="slds-item_detail slds-truncate">{record.Type}</dd>
+          <dt class="slds-item_label slds-truncate" title="Industry">Industry :</dt>
+          <dd class="slds-item_detail slds-truncate">{record.Industry}</dd>
+          <dt class="slds-item_label slds-truncate" title="Website">Website :</dt>
+          <dd class="slds-item_detail slds-truncate">{record.Website}</dd>
+          <dt class="slds-item_label slds-truncate" title="Rating">Rating :</dt>
+          <dd class="slds-item_detail slds-truncate">{record.Rating}</dd>
+      </dl>
+    </div>
+    <!-- modal footer start-->
+    <footer class="slds-modal__footer">
+         <lightning-button variant="brand"
+         label="Close"
+         title="Close"
+         onclick={closeModal}
+         ></lightning-button>
+    </footer>
+ </div>
+</section>
+<div class="slds-backdrop slds-backdrop_open"></div>
+</template>
+  </template>
+
+
+
+
+
+<----------------------------------- AllAccountDetails.js ----------------------------->
+
+import { LightningElement, track, wire, api } from 'lwc';
+// Importing Apex Class method 
+import fetchAccounts from '@salesforce/apex/allAccountDetails.fetchAccounts'
+
+
+// importing to show toast notifictions
+// import {ShowToastEvent} from 'lightning/platformShowToastEvent';
+
+// importing Account fields
+// import NAME_FIELD from '@salesforce/schema/Account.Name';
+// import Phone_FIELD from '@salesforce/schema/Account.Phone';
+// import Industry_FIELD from '@salesforce/schema/Account.Industry';
+// import Fax_FIELD from '@salesforce/schema/Account.Fax';
+
+const columns = [
+    // {
+
+//     label: 'View',
+//     type: 'button-icon',
+//     initialWidth: 75,
+//     typeAttributes: {
+//         iconName: 'action:preview',
+//         title: 'Preview',
+//         variant: 'border-filled',
+//         alternativeText: 'View'
+//     }
+// },
+{ label: 'Name', fieldName: 'AccountName', type: 'url',
+    typeAttributes: { label: { fieldName: 'Name' }, target: '_blank'} },
+// {
+//     label: 'Name',
+//     fieldName: 'Name',
+//     type: 'Text',
+//     pointer-events: 'none',
+//     position: 'relative',
+//   cursor: 'pointer',
+//     typeAttributes: {
+//         iconName: 'action:preview',
+//         title: 'Preview',
+//         variant: 'border-filled',
+//         alternativeText: 'View',
+//         label: { fieldName: 'Name' }, target: 'https://developer.salesforce.com/forums/?id=9062I000000UcbQQAS'
+//     }
+// },
+{
+    label: 'Phone',
+    fieldName: 'Phone'
+},
+{
+    label: 'Type',
+    fieldName: 'Type'
+}
+];
+
+export default class AllAccountDetails extends LightningElement {
+
+    
+    @track columns = columns;
+    @track record = {};
+    @track rowOffset = 0;
+    @track data = {};
+    @track bShowModal = false;
+    availableAccounts;
+    error;
+    // @wire(fetchAccounts) parameters;
+
+    // Row Action event to show the details of the record
+    // handleRowAction(event) {
+    //     const row = event.detail.row;
+    //     this.record = row;
+    //     this.bShowModal = true; // display modal window
+    // }
+
+    // to close modal window set 'bShowModal' tarck value as false
+    closeModal() {
+        this.bShowModal = false;
+    }
+    @wire( fetchAccounts )  
+    wiredAccount( { error, data } ) {
+
+        if ( data ) {
+
+            let tempRecs = [];
+            data.forEach( ( record ) => {
+                let tempRec = Object.assign( {}, record );  
+                
+                    // const row = event.detail.row;
+                    // this.record = row;
+                 
+                tempRec.AccountName = '/' + tempRec.Id;
+                tempRecs.push( tempRec );
+                this.bShowModal = true; 
+                
+            });
+            this.availableAccounts = tempRecs;
+            this.error = undefined;
+
+        } else if ( error ) {
+
+            this.error = error;
+            this.availableAccounts = undefined;
+
+        }
+
+    }
+}
+
+
+<--------------------------------- AllAccountDetails.js-meta.xml----------------------->
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>56.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightning__RecordPage</target>
+    </targets>
+</LightningComponentBundle>
+
+
+
+<--------------------------------- AllAccountDetails.cls ---------------------------->
+
+public with sharing class allAccountDetails {
+    // public allAccountDetails() {
+
+    // }
+    // @AuraEnabled(Cacheable = true)
+    // public static List<Account> GetAllAccountRecords()
+    // {
+
+        @AuraEnabled(cacheable = true)
+public static List<Account> fetchAccounts(){
+    //    return [SELECT Id,Name,Phone,Type,Industry,Rating,Website FROM Account LIMIT 100];
+       return [SELECT Id,Name,Phone,Type,Industry,Rating,Website FROM Account where LastModifiedDate <= LAST_N_DAYS:1 LIMIT 10];
+
+    }
+// @AuraEnabled(Cacheable=true)
+//     Public Static List<Account> GetAllAccountRecords()
+//     {
+//         List<Account> lstAccounts = [Select id, name, rating, industry, annualrevenue,
+//                                                 phone, fax, type, ownership, billingcity
+//                                                     from Account
+//                                                         ORDER BY name];
+
+//         return lstAccounts;
+//     }
+}
+        // List<Account> fstAccount = [Select id,name, phone, industry, fax from Account WHERE LastModifiedDate < LAST_N_DAYS:0];
+    
+    // }
+
+
+<------------------------------------- AllAccountDetailsapp.app---------------------->
+
+<aura:application extends="force:slds">
+<c:allAccountDetails></c:allAccountDetails>
+</aura:application>	
